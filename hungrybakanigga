@@ -1,0 +1,202 @@
+local ZelxLib = {}
+
+local Players = game:GetService("Players")
+local UIS = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+local lp = Players.LocalPlayer
+
+local gui = Instance.new("ScreenGui")
+gui.Name = "ZelxLib"
+gui.ResetOnSpawn = false
+gui.Parent = lp:WaitForChild("PlayerGui")
+
+local toggleBtn = Instance.new("TextButton")
+toggleBtn.Size = UDim2.fromScale(0.12,0.06)
+toggleBtn.Position = UDim2.fromScale(0.02,0.45)
+toggleBtn.Text = "Z"
+toggleBtn.TextScaled = true
+toggleBtn.BackgroundColor3 = Color3.fromRGB(30,30,30)
+toggleBtn.TextColor3 = Color3.new(1,1,1)
+toggleBtn.Parent = gui
+toggleBtn.AnchorPoint = Vector2.new(0,0.5)
+toggleBtn.AutoButtonColor = false
+Instance.new("UICorner",toggleBtn).CornerRadius = UDim.new(1,0)
+
+local main = Instance.new("Frame")
+main.Size = UDim2.fromScale(0.75,0.7)
+main.Position = UDim2.fromScale(0.5,0.5)
+main.AnchorPoint = Vector2.new(0.5,0.5)
+main.BackgroundColor3 = Color3.fromRGB(18,18,18)
+main.Parent = gui
+main.Visible = true
+Instance.new("UICorner",main).CornerRadius = UDim.new(0,18)
+
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1,0,0.12,0)
+title.Text = ""
+title.TextScaled = true
+title.BackgroundTransparency = 1
+title.TextColor3 = Color3.new(1,1,1)
+title.Font = Enum.Font.GothamBold
+title.Parent = main
+
+local tabHolder = Instance.new("Frame")
+tabHolder.Size = UDim2.new(0.28,0,0.88,0)
+tabHolder.Position = UDim2.new(0,0,0.12,0)
+tabHolder.BackgroundColor3 = Color3.fromRGB(22,22,22)
+tabHolder.Parent = main
+
+local tabLayout = Instance.new("UIListLayout",tabHolder)
+tabLayout.Padding = UDim.new(0,6)
+
+local pages = Instance.new("Frame")
+pages.Size = UDim2.new(0.72,0,0.88,0)
+pages.Position = UDim2.new(0.28,0,0.12,0)
+pages.BackgroundTransparency = 1
+pages.Parent = main
+
+local function tween(obj,props,time)
+	TweenService:Create(obj,TweenInfo.new(time,Enum.EasingStyle.Quint,Enum.EasingDirection.Out),props):Play()
+end
+
+toggleBtn.MouseButton1Click:Connect(function()
+	main.Visible = not main.Visible
+end)
+
+function ZelxLib:CreateWindow(cfg)
+	title.Text = cfg.Name or "Window"
+	local Window = {}
+
+	function Window:CreateTab(name)
+		local tabBtn = Instance.new("TextButton")
+		tabBtn.Size = UDim2.new(1,-12,0,40)
+		tabBtn.Text = name
+		tabBtn.Font = Enum.Font.Gotham
+		tabBtn.TextScaled = true
+		tabBtn.BackgroundColor3 = Color3.fromRGB(28,28,28)
+		tabBtn.TextColor3 = Color3.new(1,1,1)
+		tabBtn.Parent = tabHolder
+		Instance.new("UICorner",tabBtn).CornerRadius = UDim.new(0,10)
+
+		local page = Instance.new("ScrollingFrame")
+		page.Size = UDim2.fromScale(1,1)
+		page.CanvasSize = UDim2.new(0,0,0,0)
+		page.ScrollBarImageTransparency = 1
+		page.Visible = false
+		page.Parent = pages
+
+		local layout = Instance.new("UIListLayout",page)
+		layout.Padding = UDim.new(0,10)
+
+		tabBtn.MouseButton1Click:Connect(function()
+			for _,v in ipairs(pages:GetChildren()) do
+				if v:IsA("ScrollingFrame") then v.Visible = false end
+			end
+			page.Visible = true
+		end)
+
+		local Tab = {}
+
+		function Tab:AddSection(cfg)
+			local lbl = Instance.new("TextLabel")
+			lbl.Size = UDim2.new(1,-10,0,40)
+			lbl.TextXAlignment = Left
+			lbl.Text = cfg.Name or "Section"
+			lbl.Font = Enum.Font.GothamBold
+			lbl.TextScaled = true
+			lbl.TextColor3 = Color3.new(1,1,1)
+			lbl.BackgroundTransparency = 1
+			lbl.Parent = page
+		end
+
+		function Tab:AddButton(cfg)
+			local btn = Instance.new("TextButton")
+			btn.Size = UDim2.new(1,-10,0,45)
+			btn.Text = cfg.Name or "Button"
+			btn.Font = Enum.Font.Gotham
+			btn.TextScaled = true
+			btn.BackgroundColor3 = Color3.fromRGB(35,35,35)
+			btn.TextColor3 = Color3.new(1,1,1)
+			btn.Parent = page
+			Instance.new("UICorner",btn).CornerRadius = UDim.new(0,12)
+			btn.MouseButton1Click:Connect(function()
+				if cfg.Callback then cfg.Callback() end
+			end)
+		end
+
+		function Tab:AddToggle(cfg)
+			local state = false
+			local btn = Instance.new("TextButton")
+			btn.Size = UDim2.new(1,-10,0,45)
+			btn.Text = cfg.Name
+			btn.Font = Enum.Font.Gotham
+			btn.TextScaled = true
+			btn.BackgroundColor3 = Color3.fromRGB(40,40,40)
+			btn.TextColor3 = Color3.new(1,1,1)
+			btn.Parent = page
+			Instance.new("UICorner",btn).CornerRadius = UDim.new(0,12)
+
+			btn.MouseButton1Click:Connect(function()
+				state = not state
+				tween(btn,{BackgroundColor3 = state and Color3.fromRGB(60,120,60) or Color3.fromRGB(40,40,40)},0.2)
+				if cfg.Callback then cfg.Callback(state) end
+			end)
+		end
+
+		function Tab:AddInput(cfg)
+			local box = Instance.new("TextBox")
+			box.Size = UDim2.new(1,-10,0,45)
+			box.PlaceholderText = cfg.Name or "Input"
+			box.Text = ""
+			box.Font = Enum.Font.Gotham
+			box.TextScaled = true
+			box.BackgroundColor3 = Color3.fromRGB(35,35,35)
+			box.TextColor3 = Color3.new(1,1,1)
+			box.Parent = page
+			Instance.new("UICorner",box).CornerRadius = UDim.new(0,12)
+
+			box.FocusLost:Connect(function()
+				if cfg.Callback then cfg.Callback(box.Text) end
+			end)
+		end
+
+		function Tab:AddParagraph(cfg)
+			local p = Instance.new("TextLabel")
+			p.Size = UDim2.new(1,-10,0,80)
+			p.TextWrapped = true
+			p.TextYAlignment = Top
+			p.Text = cfg.Text or ""
+			p.Font = Enum.Font.Gotham
+			p.TextScaled = true
+			p.TextColor3 = Color3.new(1,1,1)
+			p.BackgroundTransparency = 1
+			p.Parent = page
+		end
+
+		function Tab:AddDropdown(cfg)
+			local open = false
+			local btn = Instance.new("TextButton")
+			btn.Size = UDim2.new(1,-10,0,45)
+			btn.Text = cfg.Name
+			btn.Font = Enum.Font.Gotham
+			btn.TextScaled = true
+			btn.BackgroundColor3 = Color3.fromRGB(35,35,35)
+			btn.TextColor3 = Color3.new(1,1,1)
+			btn.Parent = page
+			Instance.new("UICorner",btn).CornerRadius = UDim.new(0,12)
+
+			btn.MouseButton1Click:Connect(function()
+				open = not open
+				if open and cfg.Callback then
+					cfg.Callback(cfg.Options)
+				end
+			end)
+		end
+
+		return Tab
+	end
+
+	return Window
+end
+
+return ZelxLib
